@@ -9,7 +9,7 @@
     <meta property="og:image" content="images/logo.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:color" content="#b1aad8" />
-    <meta property="og:description" content="Blacklister - Reporting made simple" />
+    <meta property="og:description" content="Blacklister - Discord Bot" />
     <meta property="og:type" content="website" />
     <meta name="theme-color" content="#b1aad8" />
     <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap" rel="stylesheet" />
@@ -24,25 +24,45 @@
         <div class="content">
           <div class="search-box">
             <div class="search-container">
-              <input type="text" class="search-input" placeholder="Enter Discord ID...">
-              <button class="search-button">Search</button>
+              <input type="text" class="search-input" placeholder="Coming soon..." disabled>
+              <button class="search-button" disabled>Search</button>
             </div>
-            <span class="search-disclaimer">Please enter a valid Discord user ID (18-digit number)</span>
+            <span class="search-disclaimer">The search feature is currently in development</span>
           </div>
         </div>
       </div>
-    </div>
-    <nav class="navbar">
+    </div>    <nav class="navbar">
       <div class="nav-content">
         <div class="nav-logo">
           <img src="images/logo.png" alt="Blacklister">
           <span>Blacklister</span>
         </div>
-        <div class="nav-links">
-          <a href="/team">Team</a>
-          <a href="https://discord.gg/blacklists">Support</a>
+        <div class="hamburger">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="https://discord.gg/blacklists">Support</a>
+          </div>
       </div>
     </nav>
+    <script>
+      const hamburger = document.querySelector('.hamburger');
+      const navLinks = document.querySelector('.nav-links');
+      
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navLinks.classList.toggle('active');
+      });
+
+      document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', () => {
+          hamburger.classList.remove('active');
+          navLinks.classList.remove('active');
+        });
+      });
+    </script>
   </body>
 </html>
