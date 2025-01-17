@@ -1,3 +1,11 @@
+<!--
+
+    The contents of this file are owned by Bailey Bots, LLC.
+    For legal inquiries, contact legal@bailey.rest
+    All rights reserved. Unauthorized use, reproduction, or distribution is prohibited.
+    
+-->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -16,6 +24,23 @@
     <link rel="stylesheet" href="css/main/1.css" />
   </head>
   <body>
+    <nav class="navbar">
+      <div class="nav-content">
+        <div class="nav-logo">
+          <img src="images/logo.png" alt="Blacklister">
+          <span>Blacklister</span>
+        </div>
+        <button class="hamburger" aria-label="Toggle menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="/team">Team</a>
+          <a href="https://discord.gg/blacklists">Support</a>
+        </div>
+      </div>
+    </nav>
     <div class="container">
       <div class="hero">
         <img src="images/logo.png" alt="Blacklister Logo" class="logo">
@@ -31,21 +56,21 @@
         </div>
       </div>    
     </div>    
-    <div class="report-overlay" style="display: none;">
+    <div class="report-overlay">
       <div class="report-panel">
         <div class="report-header">
-          <h2 class="section-title">Report Information</h2>
-          <button class="close-panel">×</button>
+          <h2>Report Information</h2>
+          <button class="close-panel" aria-label="Close panel">×</button>
         </div>
         <div class="report-content">
-          <div class="loading" style="display: none;">
+          <div class="loading" hidden>
             <div class="loading-spinner"></div>
             <p>Searching records...</p>
           </div>
-          <div class="no-records" style="display: none;">
+          <div class="no-records" hidden>
             <p>No records found for this user.</p>
           </div>
-          <div class="records-found" style="display: none;">
+          <div class="records-found" hidden>
             <div class="record-item">
               <div class="record-header">
                 <div class="user-info">
@@ -62,7 +87,7 @@
                 </div>
                 <div class="evidence-box">
                   <h3>Evidence</h3>
-                  <a class="document-link" target="_blank">View Document</a>
+                  <a class="document-link" target="_blank" rel="noopener noreferrer">View Document</a>
                 </div>
               </div>
             </div>
@@ -70,268 +95,93 @@
         </div>
       </div>
     </div>
-    <nav class="navbar">
-      <div class="nav-content">
-        <div class="nav-logo">
-          <img src="images/logo.png" alt="Blacklister">
-          <span>Blacklister</span>
-        </div>
-        <div class="hamburger">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-        <div class="nav-links">
-            <a href="/team">Team</a>
-            <a href="https://discord.gg/blacklists">Support</a>
-          </div>
-      </div>
-    </nav>
     <script>
-      const hamburger = document.querySelector('.hamburger');
-      const navLinks = document.querySelector('.nav-links');
-      const searchButton = document.querySelector('.search-button');
-      const searchInput = document.querySelector('.search-input');
-      const reportOverlay = document.querySelector('.report-overlay');
-      const closePanel = document.querySelector('.close-panel');
-      const loading = document.querySelector('.loading');
-      const noRecords = document.querySelector('.no-records');
-      const recordsFound = document.querySelector('.records-found');
-      
-      hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        navLinks.classList.toggle('active');
-      });
+      const elements = (() => {
+        const selectors = {
+          hamburger: '.hamburger',
+          navLinks: '.nav-links',
+          searchButton: '.search-button',
+          searchInput: '.search-input',
+          reportOverlay: '.report-overlay',
+          closePanel: '.close-panel',
+          loading: '.loading',
+          noRecords: '.no-records',
+          recordsFound: '.records-found'
+        };
+        
+        return Object.fromEntries(
+          Object.entries(selectors).map(([key, selector]) => [key, document.querySelector(selector)])
+        );
+      })();
 
-      document.querySelectorAll('.nav-links a').forEach(link => {
-        link.addEventListener('click', () => {
-          hamburger.classList.remove('active');
-          navLinks.classList.remove('active');
-        });
-      });
+      const toggleMenu = () => {
+        [elements.hamburger, elements.navLinks].forEach(el => el.classList.toggle('active'));
+      };
 
-      searchButton.addEventListener('click', async () => {
-        const userId = searchInput.value.trim();
+      const hideMenu = () => {
+        [elements.hamburger, elements.navLinks].forEach(el => el.classList.remove('active'));
+      };
+
+      const toggleElement = (element, show) => element.hidden = !show;
+
+      const formatDate = date => {
+        return new Intl.DateTimeFormat('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }).format(new Date(date));
+      };
+
+      const updateRecordDisplay = ({ user_id, added_date, reason, document_url }) => {
+        const recordsFound = elements.recordsFound;
+        recordsFound.querySelector('.user-id').textContent = `User ID: ${user_id}`;
+        recordsFound.querySelector('.date').textContent = formatDate(added_date);
+        recordsFound.querySelector('.reason').textContent = reason;
+        recordsFound.querySelector('.document-link').href = document_url;
+      };
+
+      const handleSearch = async () => {
+        const userId = elements.searchInput.value.trim();
         if (!userId) return;
 
-        reportOverlay.style.display = 'flex';
-        loading.style.display = 'block';
-        noRecords.style.display = 'none';
-        recordsFound.style.display = 'none';
+        elements.reportOverlay.style.display = 'flex';
+        toggleElement(elements.loading, true);
+        toggleElement(elements.noRecords, false);
+        toggleElement(elements.recordsFound, false);
 
         try {
-          const response = await fetch(`https://roblox.bailey.rest/records?user=${userId}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': 'joybaileytreywoof'
-            }
-          });
-          const data = await response.json();
+          const response = await fetch(`https://roblox.bailey.rest/records?user=${encodeURIComponent(userId)}`);
+          if (!response.ok) throw new Error('Network response was not ok');
+          const { records = [] } = await response.json();
 
-          loading.style.display = 'none';
-
-          if (data.records && data.records.length > 0) {
-            recordsFound.style.display = 'block';
-            const record = data.records[0];
-            recordsFound.querySelector('.user-id').textContent = `User ID: ${userId}`;
-            recordsFound.querySelector('.date').textContent = new Date(record.added_date).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            });
-            recordsFound.querySelector('.reason').textContent = record.reason;
-            recordsFound.querySelector('.document-link').href = record.document_url;
+          toggleElement(elements.loading, false);
+          
+          if (records.length) {
+            toggleElement(elements.recordsFound, true);
+            updateRecordDisplay(records[0]);
           } else {
-            noRecords.style.display = 'block';
+            toggleElement(elements.noRecords, true);
           }
         } catch (error) {
-          loading.style.display = 'none';
-          noRecords.style.display = 'block';
+          console.error('Search failed:', error);
+          toggleElement(elements.loading, false);
+          toggleElement(elements.noRecords, true);
         }
-      });
+      };
 
-      closePanel.addEventListener('click', () => {
-        reportOverlay.style.display = 'none';
-      });
-
-      reportOverlay.addEventListener('click', (e) => {
-        if (e.target === reportOverlay) {
-          reportOverlay.style.display = 'none';
+      const closeOverlay = ({ target }) => {
+        if (target === elements.reportOverlay || target === elements.closePanel) {
+          elements.reportOverlay.style.display = 'none';
         }
-      });
+      };
+
+      elements.hamburger.addEventListener('click', toggleMenu);
+      document.querySelectorAll('.nav-links a').forEach(link => 
+        link.addEventListener('click', hideMenu)
+      );
+      elements.searchButton.addEventListener('click', handleSearch);
+      elements.closePanel.addEventListener('click', closeOverlay);
+      elements.reportOverlay.addEventListener('click', closeOverlay);
     </script>
-    <style>
-      .report-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(10, 10, 10, 0.8);
-        backdrop-filter: blur(8px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-      }
-
-      .report-panel {
-        background: rgba(15, 15, 20, 0.95);
-        border: 1px solid rgba(177, 170, 216, 0.1);
-        border-radius: 16px;
-        width: 90%;
-        max-width: 600px;
-        padding: 24px;
-        box-shadow: 0 8px 32px rgba(177, 170, 216, 0.1);
-        font-family: 'Satoshi', sans-serif;
-        color: var(--text-light);
-        animation: fadeIn 0.3s ease-out;
-      }
-
-      .report-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        border-bottom: 1px solid rgba(177, 170, 216, 0.1);
-        padding-bottom: 20px;
-      }
-
-      .report-header h2 {
-        font-size: 1.8rem;
-        margin: 0;
-      }
-
-      .close-panel {
-        background: none;
-        border: none;
-        color: var(--text-light);
-        font-size: 24px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(177, 170, 216, 0.05);
-      }
-
-      .close-panel:hover {
-        background: rgba(177, 170, 216, 0.1);
-        transform: rotate(90deg);
-      }
-
-      .loading {
-        text-align: center;
-        padding: 40px;
-      }
-
-      .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid rgba(177, 170, 216, 0.1);
-        border-top: 3px solid var(--primary);
-        border-radius: 50%;
-        margin: 0 auto 20px;
-        animation: spin 1s linear infinite;
-      }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-
-      .no-records {
-        text-align: center;
-        color: #a7a7a7;
-        padding: 40px;
-        background: rgba(177, 170, 216, 0.05);
-        border-radius: 12px;
-      }
-
-      .record-item {
-        background: rgba(177, 170, 216, 0.05);
-        border-radius: 12px;
-        overflow: hidden;
-        animation: fadeIn 0.3s ease-out;
-      }
-
-      .record-header {
-        background: rgba(177, 170, 216, 0.08);
-        padding: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .user-id {
-        font-weight: 600;
-        color: var(--primary);
-      }
-
-      .record-date {
-        color: #a7a7a7;
-        font-size: 0.9rem;
-      }
-
-      .record-details {
-        padding: 20px;
-      }
-
-      .reason-box, .evidence-box {
-        margin-bottom: 20px;
-      }
-
-      .reason-box h3, .evidence-box h3 {
-        color: var(--primary);
-        font-size: 1rem;
-        margin-bottom: 8px;
-      }
-
-      .reason {
-        background: rgba(177, 170, 216, 0.05);
-        padding: 12px;
-        border-radius: 8px;
-        margin: 0;
-      }
-
-      .document-link {
-        display: inline-block;
-        color: var(--text-light);
-        text-decoration: none;
-        padding: 8px 16px;
-        background: rgba(177, 170, 216, 0.1);
-        border-radius: 8px;
-        transition: all 0.3s ease;
-      }
-
-      .document-link:hover {
-        background: rgba(177, 170, 216, 0.15);
-        transform: translateY(-2px);
-      }
-
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      @media (max-width: 768px) {
-        .report-panel {
-          width: 95%;
-          padding: 16px;
-        }
-
-        .report-header h2 {
-          font-size: 1.5rem;
-        }
-
-        .record-header {
-          flex-direction: column;
-          gap: 10px;
-          align-items: flex-start;
-        }
-      }
-    </style>
   </body>
 </html>
