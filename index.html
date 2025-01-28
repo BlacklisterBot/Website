@@ -30,11 +30,6 @@
           <img src="images/logo.png" alt="Blacklister">
           <span>Blacklister</span>
         </div>
-        <button class="hamburger" aria-label="Toggle menu">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
         <div class="nav-links">
           <a href="/team">Team</a>
           <a href="https://discord.gg/blacklists">Support</a>
@@ -98,8 +93,6 @@
     <script>
       const elements = (() => {
         const selectors = {
-          hamburger: '.hamburger',
-          navLinks: '.nav-links',
           searchButton: '.search-button',
           searchInput: '.search-input',
           reportOverlay: '.report-overlay',
@@ -113,14 +106,6 @@
           Object.entries(selectors).map(([key, selector]) => [key, document.querySelector(selector)])
         );
       })();
-
-      const toggleMenu = () => {
-        [elements.hamburger, elements.navLinks].forEach(el => el.classList.toggle('active'));
-      };
-
-      const hideMenu = () => {
-        [elements.hamburger, elements.navLinks].forEach(el => el.classList.remove('active'));
-      };
 
       const toggleElement = (element, show) => element.hidden = !show;
 
@@ -175,10 +160,6 @@
         }
       };
 
-      elements.hamburger.addEventListener('click', toggleMenu);
-      document.querySelectorAll('.nav-links a').forEach(link => 
-        link.addEventListener('click', hideMenu)
-      );
       elements.searchButton.addEventListener('click', handleSearch);
       elements.closePanel.addEventListener('click', closeOverlay);
       elements.reportOverlay.addEventListener('click', closeOverlay);
